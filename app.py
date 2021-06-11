@@ -14,9 +14,13 @@ TELEGRAM_CHATID = os.environ.get('TELEGRAM_CHATID', None)
 @app.route("/webhook", methods=["POST"])
 def webhook():
     events = request.get_json()
-    for event in events['alerts']:
-        telegram_handle(message=event['labels'])
-    return jsonify(message="Handling message"), 200
+    try:
+       events[0]["labels"]["test_msg"] == "Webhook setting validated"
+       return jsonify(message="Handling message"), 200
+    except:
+        for event in events['alerts']:
+            telegram_handle(message=event['labels'])
+        return jsonify(message="Handling message"), 200
 
 
 
@@ -24,9 +28,11 @@ def webhook():
 def telegram_handle(message):
     if TELEGRAM_TOKEN and TELEGRAM_CHATID:
         bot = telegram.Bot(token=TELEGRAM_TOKEN)
+        text = "```{}```".format(message)
+        text = text.replace(", ", "\n")
         try:
             bot.send_message(chat_id=TELEGRAM_CHATID,
-                             text="```{}```".format(message),
+                             text=text,
                              parse_mode=telegram.ParseMode.MARKDOWN,
                              timeout=int(60))
             return True
